@@ -2,11 +2,12 @@
 precision mediump float;
 uniform float iTime;
 uniform float rad;
-uniform float srad;
 uniform vec2 iMouse;
+uniform vec2 plane;
 uniform vec2 res;
 uniform vec3 cpos;
 uniform vec3 lpos;
+uniform vec3 rads;
 uniform float sposs[9];
 out vec4 fragColor;
 
@@ -23,6 +24,11 @@ float intersectPlane( in vec3 rayOrigin, in vec3 rayDirection, in vec2 bounds, i
         return MAX_DIST;
     } else {
         normal = planeNormal;
+        vec3 p = rayOrigin + d * rayDirection;
+        if(p.x > plane.x || p.x < -plane.x)
+            return MAX_DIST;
+        if(p.z > plane.y || p.z < -plane.y)
+            return MAX_DIST;
     	return d;
     }
 }
@@ -123,9 +129,9 @@ vec3 worldhit( in vec3 rayOrigin, in vec3 rayDirection, in vec2 dist, out vec3 n
     vec3 sp3 = vec3(sposs[6],sposs[7],sposs[8]);
     d = firstIntersection(d, intersectPlane(rayOrigin, rayDirection, d.xy, normal, vec3(0,1,0), 0.), 1.);//plane
     d = firstIntersection(d, iEllipsoid(rayOrigin-lpos, rayDirection, d.xy, normal, vec3(rad,0.01,rad)), 3.);//light
-    d = firstIntersection(d, iSphere(rayOrigin-sp1, rayDirection, d.xy, normal, srad), 2.);//sphere
-    d = firstIntersection(d, iSphere(rayOrigin-sp2, rayDirection, d.xy, normal, srad), 2.);//sphere
-    d = firstIntersection(d, iSphere(rayOrigin-sp3, rayDirection, d.xy, normal, srad), 2.);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp1, rayDirection, d.xy, normal, rads.x), 1.7);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp2, rayDirection, d.xy, normal, rads.y), 1.8);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp3, rayDirection, d.xy, normal, rads.z), 1.9);//sphere
     
     return d;
 }
@@ -169,17 +175,33 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         col *= albedo;
         float a = 0;
         vec3 lray = lpos - rayOrigin;
+        vec3 spos;
+        vec3 pray = spos - rayOrigin;
+        if(rayHit.z > 1.85){
+            spos = vec3(sposs[6],sposs[7], sposs[8]);
+            pray = spos - rayOrigin;
+            float angle = dot(normalize(lray), normalize(pray)/rad);
+            col = vec3(.5-angle);
+            return col;
+        } else if(rayHit.z > 1.75){
+            spos = vec3(sposs[3],sposs[4], sposs[5]);
+            pray = spos - rayOrigin;
+            float angle = dot(normalize(lray), normalize(pray)/rad);
+            col = vec3(.5-angle);
+            return col;
+        } else if(rayHit.z > 1.65){
+            spos = vec3(sposs[0],sposs[1], sposs[2]);
+            pray = spos - rayOrigin;
+            float angle = dot(normalize(lray), normalize(pray)/rad);
+            col = vec3(.5-angle);
+            return col;
+        }
         for( int i = 0; i < 3; i++){
-            vec3 spos = vec3(sposs[3*i],sposs[3*i+1], sposs[3*i + 2]);
-            vec3 pray = spos - rayOrigin;
-            if(rayHit.z > 1.5){
-                float angle = dot(normalize(lray), normalize(pray)/rad);
-                col = vec3(.5-angle);
-                return col;
-            }
+            spos = vec3(sposs[3*i],sposs[3*i+1], sposs[3*i + 2]);
+            pray = spos - rayOrigin;
             float ratio =  (rayOrigin.y - lpos.y) / (rayOrigin.y - spos.y);
             vec3 projp = pray * ratio + rayOrigin; 
-            float r2 = srad * ratio;
+            float r2 = rads[i] * ratio;
             float r1 = rad;
             float d = length(projp - lpos);
             float a_max = pow(r1, 2);
@@ -244,13 +266,9 @@ void main() {
     float seed = float(baseHash(floatBitsToUint(p - iTime)))/float(0xffffffffU);
 	
 	//p += 2.*randomHashNoise(seed)/600.;
-	vec3 rayDirection = ca * normalize( vec3(p.xy,6) );  
+	vec3 rayDirection = ca * normalize( vec3(p.xy,1.6) );  
 
     vec4 temp = vec4(render(rayOrigin, rayDirection, seed),1);
-    for(int i=0; i< 32; i++){
-        seed = float(baseHash(floatBitsToUint(p - iTime + float(i))))/float(0xffffffffU);
-        temp += vec4(render(rayOrigin, rayDirection, seed), 1);
-    }
     temp = vec4(temp.rgb / temp.w, 1);
     temp = max( vec4(0), temp - 0.004);
     fragColor = (temp*(6.2*temp + .5)) / (temp*(6.2*temp+1.7) + 0.06);
