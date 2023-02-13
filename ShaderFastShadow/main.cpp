@@ -35,7 +35,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
     Sphere UV-s and get shadows on each circle/sphere
 */
 
-glm::vec3 camPos = glm::vec3(10.0f, 10.0f, 10.0f);
+glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 camFront = glm::vec3(-1.0f, -1.0f, -1.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 0.0f, 1.0f);
 float sensitivity = 5.0f;
@@ -63,17 +63,17 @@ void processInput(GLFWwindow* window)
 
     float camSpeed = static_cast<float>(sensitivity * deltaTimeFrame);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        //camPos += camSpeed * glm::vec3(0.0,0.2,0.0);
+        camPos += camSpeed * glm::vec3(0.0,0.2,0.0);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        //camPos -= camSpeed * glm::vec3(0.0, 0.2, 0.0);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camPos -= camSpeed * glm::vec3(0.0, 0.2, 0.0);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
         //camPos -= camSpeed * glm::normalize(glm::cross(camFront, camUp));
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
         //camPos += camSpeed * glm::normalize(glm::cross(camFront, camUp));
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        //camPos += camSpeed * camUp;
+        camPos += camSpeed * glm::vec3(0.5f, 0.0f, 0.5f);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        //camPos -= camSpeed * camUp;
+        camPos -= camSpeed * glm::vec3(0.5f, 0.0f, 0.5f);
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
@@ -156,6 +156,9 @@ int main() {
     Shader shader("C:\\Src\\shaders\\vertRayFrag.glsl","C:\\Src\\shaders\\fragRayFrag.glsl");
 
     glm::vec3 cpos(0.0f,0.0f,0.0f);
+    glm::vec3 lPos(0.0f, 0.0f, 0.0f);
+    glm::vec3 sPos(0.0f, 0.0f, 0.0f);
+    float rad = 2.f, srad = 1.0f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -178,7 +181,11 @@ int main() {
         if(focused)
             shader.setVec2("iMouse", glm::vec2(xpos, ypos));
         shader.setVec3("cpos", camPos);
+        shader.setVec3("spos", sPos);
+        shader.setVec3("lpos", lPos);
         shader.setFloat("iTime", currentFrame);
+        shader.setFloat("rad", rad);
+        shader.setFloat("srad", srad);
         shader.setVec2("res", glm::vec2(width, height));
 
         glBindVertexArray(vao);
@@ -192,6 +199,11 @@ int main() {
 
         ImGui::Begin("RayTraceDemo");
         ImGui::DragFloat3("Cam Pos", &camPos[0], 0.01);
+        ImGui::DragFloat("Light Radius", &rad, 0.01);
+        ImGui::DragFloat("Sphere Radius", &srad, 0.01);
+        ImGui::DragFloat3("Sphere Pos", &sPos[0], 0.01);
+        ImGui::DragFloat3("Light Pos", &lPos[0], 0.01);
+        
         if (ImGui::Button("Refresh Shader"))
             shader = Shader("C:\\Src\\shaders\\vertRayFrag.glsl", "C:\\Src\\shaders\\fragRayFrag.glsl");
         ImGui::End();
