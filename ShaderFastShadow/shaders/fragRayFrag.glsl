@@ -7,7 +7,7 @@ uniform vec2 iMouse;
 uniform vec2 res;
 uniform vec3 cpos;
 uniform vec3 lpos;
-uniform vec3 spos;
+uniform float sposs[9];
 out vec4 fragColor;
 
 #define MAX_DIST 1e10
@@ -118,10 +118,14 @@ vec3 firstIntersection( vec3 d, float iResult, float mat ) {
 
 vec3 worldhit( in vec3 rayOrigin, in vec3 rayDirection, in vec2 dist, out vec3 normal ) {
     vec3 d = vec3(dist, 0.);
-
+    vec3 sp1 = vec3(sposs[0],sposs[1],sposs[2]);
+    vec3 sp2 = vec3(sposs[3],sposs[4],sposs[5]);
+    vec3 sp3 = vec3(sposs[6],sposs[7],sposs[8]);
     d = firstIntersection(d, intersectPlane(rayOrigin, rayDirection, d.xy, normal, vec3(0,1,0), 0.), 1.);//plane
     d = firstIntersection(d, iEllipsoid(rayOrigin-lpos, rayDirection, d.xy, normal, vec3(rad,0.01,rad)), 3.);//light
-    d = firstIntersection(d, iSphere(rayOrigin-spos, rayDirection, d.xy, normal, srad), 2.);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp1, rayDirection, d.xy, normal, srad), 2.);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp2, rayDirection, d.xy, normal, srad), 2.);//sphere
+    d = firstIntersection(d, iSphere(rayOrigin-sp3, rayDirection, d.xy, normal, srad), 2.);//sphere
     
     return d;
 }
@@ -163,38 +167,44 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         rayOrigin += rayDirection * rayHit.y; // update hit pos
         getMaterialProperties(rayOrigin, rayHit.z, albedo, matType, roughness);//get materials
         col *= albedo;
+        float a = 0;
         vec3 lray = lpos - rayOrigin;
-        vec3 pray = spos - rayOrigin;
-        if(rayHit.z > 1.5){
-            float angle = dot(normalize(lray), normalize(pray)/rad);
-            col = vec3(.5-angle);
-            return col;
+        for( int i = 0; i < 3; i++){
+            vec3 spos = vec3(sposs[3*i],sposs[3*i+1], sposs[3*i + 2]);
+            vec3 pray = spos - rayOrigin;
+            if(rayHit.z > 1.5){
+                float angle = dot(normalize(lray), normalize(pray)/rad);
+                col = vec3(.5-angle);
+                return col;
+            }
+            float ratio =  (rayOrigin.y - lpos.y) / (rayOrigin.y - spos.y);
+            vec3 projp = pray * ratio + rayOrigin; 
+            float r2 = srad * ratio;
+            float r1 = rad;
+            float d = length(projp - lpos);
+            float a_max = pow(r1, 2);
+            float b;
+            if (d > r2 + r1) {
+                b = 0.0f;
+            }
+            else if (d <= (r1 - r2) && r1 >= r2) {
+                b = pow(r2, 2) / a_max;
+            }
+            else if (d <= (r2 - r1) && r2 >= r1) {
+                b = pow(r1, 2) / a_max;
+            }
+            else {
+                float alpha = acos((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d)) * 2;
+                float beta = acos((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d)) * 2;
+                float a1 = 0.5 * beta * r2 * r2 - 0.5f * r2 * r2 * sin(beta);
+                float a2 = 0.5 * alpha * r1 * r1 - 0.5f * r1 * r1 * sin(alpha);
+                b = (a1 + a2)/(a_max * 3.14);
+                
+            }
+            a = a+b-a*b;
         }
         
-        float ratio =  (rayOrigin.y - lpos.y) / (rayOrigin.y - spos.y);
-        vec3 projp = pray * ratio + rayOrigin; 
-        float r2 = srad * ratio;
-        float r1 = rad;
-        float d = length(projp - lpos);
-        float a_max = pow(r1, 2);
-        float b;
-        if (d > r2 + r1) {
-            b = 0.0f;
-        }
-        else if (d <= (r1 - r2) && r1 >= r2) {
-            b = pow(r2, 2) / a_max;
-        }
-        else if (d <= (r2 - r1) && r2 >= r1) {
-            b = pow(r1, 2) / a_max;
-        }
-        else {
-            float alpha = acos((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d)) * 2;
-            float beta = acos((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d)) * 2;
-            float a1 = 0.5 * beta * r2 * r2 - 0.5f * r2 * r2 * sin(beta);
-            float a2 = 0.5 * alpha * r1 * r1 - 0.5f * r1 * r1 * sin(alpha);
-            b = (a1 + a2)/(a_max * 3.14);
-        }
-        col *= vec3(1.0f-b);
+        col *= vec3(1.0f-a);
         return col;
     } else if(rayHit.z < 2.5 && rayHit.z > 1.5){
         rayOrigin += rayDirection * rayHit.y; // update hit pos
@@ -234,7 +244,7 @@ void main() {
     float seed = float(baseHash(floatBitsToUint(p - iTime)))/float(0xffffffffU);
 	
 	//p += 2.*randomHashNoise(seed)/600.;
-	vec3 rayDirection = ca * normalize( vec3(p.xy,1.6) );  
+	vec3 rayDirection = ca * normalize( vec3(p.xy,6) );  
 
     vec4 temp = vec4(render(rayOrigin, rayDirection, seed),1);
     for(int i=0; i< 32; i++){
