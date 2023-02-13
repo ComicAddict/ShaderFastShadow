@@ -66,9 +66,9 @@ void processInput(GLFWwindow* window)
         camPos += camSpeed * glm::vec3(0.0,0.2,0.0);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camPos -= camSpeed * glm::vec3(0.0, 0.2, 0.0);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
+    //if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         //camPos -= camSpeed * glm::normalize(glm::cross(camFront, camUp));
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
+    //if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         //camPos += camSpeed * glm::normalize(glm::cross(camFront, camUp));
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         camPos += camSpeed * glm::vec3(0.5f, 0.0f, 0.5f);
@@ -131,6 +131,7 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -150,16 +151,19 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glLineWidth(4.0f);
-
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
     int width, height;
     double xpos, ypos;
     Shader shader("C:\\Src\\shaders\\vertRayFrag.glsl","C:\\Src\\shaders\\fragRayFrag.glsl");
 
     glm::vec3 cpos(0.0f,0.0f,0.0f);
-    glm::vec3 lPos(0.0f, 0.0f, 0.0f);
-    glm::vec3 sPos(0.0f, 0.0f, 0.0f);
+    glm::vec3 lPos(0.0f, 5.0f, 0.0f);
+    glm::vec3 sPos(0.0f, 1.0f, 0.0f);
+    glm::vec2 psize(5.0f, 5.0f);
+    glm::vec3 rads(1.0f, 1.0f, 1.0f);
     float rad = 2.f, srad = 1.0f;
-    float sposs[9] = {0};
+    float sposs[9] = {0,1,0,2,1,0,-2,1,0};
     while (!glfwWindowShouldClose(window))
     {
 
@@ -185,7 +189,8 @@ int main() {
         shader.setVec3("lpos", lPos);
         shader.setFloat("iTime", currentFrame);
         shader.setFloat("rad", rad);
-        shader.setFloat("srad", srad);
+        shader.setVec3("rads", rads);
+        shader.setVec2("plane", psize);
         shader.setVec2("res", glm::vec2(width, height));
 
         glBindVertexArray(vao);
@@ -195,23 +200,35 @@ int main() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGui::DockSpaceOverViewport(viewport, dockspace_flags);
 
 
-        ImGui::Begin("RayTraceDemo");
-        ImGui::DragFloat3("Cam Pos", &camPos[0], 0.01);
-        ImGui::DragFloat("Light Radius", &rad, 0.01);
-        ImGui::DragFloat("Sphere Radius", &srad, 0.01);
-        ImGui::DragFloat3("Sphere Pos1", &sposs[0], 0.01);
-        ImGui::DragFloat3("Sphere Pos2", &sposs[3], 0.01);
-        ImGui::DragFloat3("Sphere Pos3", &sposs[6], 0.01);
+
+
+        ImGui::Begin("Light and Cam");
+        ImGui::DragFloat3("Cam Pos", &camPos[0], 0.01f);
+        ImGui::DragFloat("Light Radius", &rad, 0.01f);
         ImGui::DragFloat3("Light Pos", &lPos[0], 0.01);
         
         if (ImGui::Button("Refresh Shader"))
             shader = Shader("C:\\Src\\shaders\\vertRayFrag.glsl", "C:\\Src\\shaders\\fragRayFrag.glsl");
         ImGui::End();
 
+        ImGui::Begin("Objects");
+        ImGui::DragFloat2("Plane Size", &psize[0], 0.01f);
+        ImGui::DragFloat3("Sphere Radius", &rads[0], 0.01f);
+        ImGui::DragFloat3("Sphere Pos1", &sposs[0], 0.01f);
+        ImGui::DragFloat3("Sphere Pos2", &sposs[3], 0.01f);
+        ImGui::DragFloat3("Sphere Pos3", &sposs[6], 0.01f);
+        ImGui::End();
+
 
         ImGui::Render();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
         glfwPollEvents();
