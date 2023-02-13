@@ -159,7 +159,7 @@ int main() {
     glm::vec3 lPos(0.0f, 0.0f, 0.0f);
     glm::vec3 sPos(0.0f, 0.0f, 0.0f);
     float rad = 2.f, srad = 1.0f;
-
+    float sposs[9] = {0};
     while (!glfwWindowShouldClose(window))
     {
 
@@ -181,7 +181,7 @@ int main() {
         if(focused)
             shader.setVec2("iMouse", glm::vec2(xpos, ypos));
         shader.setVec3("cpos", camPos);
-        shader.setVec3("spos", sPos);
+        glUniform1fv(glGetUniformLocation(shader.ID, "sposs"), 9, sposs);
         shader.setVec3("lpos", lPos);
         shader.setFloat("iTime", currentFrame);
         shader.setFloat("rad", rad);
@@ -201,7 +201,9 @@ int main() {
         ImGui::DragFloat3("Cam Pos", &camPos[0], 0.01);
         ImGui::DragFloat("Light Radius", &rad, 0.01);
         ImGui::DragFloat("Sphere Radius", &srad, 0.01);
-        ImGui::DragFloat3("Sphere Pos", &sPos[0], 0.01);
+        ImGui::DragFloat3("Sphere Pos1", &sposs[0], 0.01);
+        ImGui::DragFloat3("Sphere Pos2", &sposs[3], 0.01);
+        ImGui::DragFloat3("Sphere Pos3", &sposs[6], 0.01);
         ImGui::DragFloat3("Light Pos", &lPos[0], 0.01);
         
         if (ImGui::Button("Refresh Shader"))
