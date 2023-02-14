@@ -144,7 +144,7 @@ vec3 noHit( vec3 rayDirection ) {
     vec3 col = vec3(0.5,0.5,0.9);
     float sun = clamp(dot(normalize(vec3(-.1,.1,-.1)),rayDirection), 0., 1.);
     col += vec3(0.75,0.8,0.9)*(2.*pow(sun,8.) + 10.*pow(sun,32.));
-    return vec3(0);
+    return col;
 }
 
 void getMaterialProperties(in vec3 pos, in float mat, out vec3 albedo, out float matType, out float roughness) {
@@ -401,7 +401,7 @@ void main() {
     if (fragpos.x < part)
         temp = vec4(render(rayOrigin, rayDirection, seed),1);
     else{
-        for(int i = 0; i < 16; i++){
+        for(int i = 0; i < 4; i++){
             temp += vec4(render2(rayOrigin, rayDirection, seed),1);
         }
     }
