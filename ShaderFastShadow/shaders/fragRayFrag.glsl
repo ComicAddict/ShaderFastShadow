@@ -397,11 +397,15 @@ void main() {
 	//p += 2.*randomHashNoise(seed)/600.;
 	vec3 rayDirection = ca * normalize( vec3(p.xy,1.6) );  
 
-    vec4 temp;
+    vec4 temp = vec4(0);
     if (fragpos.x < part)
         temp = vec4(render(rayOrigin, rayDirection, seed),1);
-    else
-        temp = vec4(render2(rayOrigin, rayDirection, seed),1);
+    else{
+        for(int i = 0; i < 16; i++){
+            temp += vec4(render2(rayOrigin, rayDirection, seed),1);
+        }
+    }
+    
     temp = vec4(temp.rgb / temp.w, 1);
     temp = max( vec4(0), temp - 0.004);
     fragColor = (temp*(6.2*temp + .5)) / (temp*(6.2*temp+1.7) + 0.06);
