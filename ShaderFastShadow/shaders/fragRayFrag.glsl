@@ -24,11 +24,11 @@ float intersectPlane( in vec3 rayOrigin, in vec3 rayDirection, in vec2 bounds, i
         return MAX_DIST;
     } else {
         normal = planeNormal;
-        vec3 p = rayOrigin + d * rayDirection;
-        if(p.x > plane.x || p.x < -plane.x)
-            return MAX_DIST;
-        if(p.z > plane.y || p.z < -plane.y)
-            return MAX_DIST;
+        //vec3 p = rayOrigin + d * rayDirection;
+        //if(p.x > plane.x || p.x < -plane.x)
+          //  return MAX_DIST;
+        //if(p.z > plane.y || p.z < -plane.y)
+           // return MAX_DIST;
     	return d;
     }
 }
@@ -132,21 +132,22 @@ vec3 worldhit( in vec3 rayOrigin, in vec3 rayDirection, in vec2 dist, out vec3 n
     d = firstIntersection(d, iSphere(rayOrigin-sp1, rayDirection, d.xy, normal, rads.x), 1.7);//sphere
     d = firstIntersection(d, iSphere(rayOrigin-sp2, rayDirection, d.xy, normal, rads.y), 1.8);//sphere
     d = firstIntersection(d, iSphere(rayOrigin-sp3, rayDirection, d.xy, normal, rads.z), 1.9);//sphere
+    //d = firstIntersection(d, iSphere(rayOrigin, rayDirection, d.xy, normal, 45.0), 3.0);//sphere
     
     return d;
 }
 
 vec3 noHit( vec3 rayDirection ) {
-    //vec3 col = vec3(.5,.5,0.5);
-    //float sun = clamp(dot(normalize(vec3(-.0,.1,-.0)),rayDirection), 0., 1.);
-    //col += vec3(1,1,1)*(2.*pow(sun,8.) + 10.*pow(sun,32.));
-    return vec3(0);
+    vec3 col = vec3(0.5,0.5,0.9);
+    float sun = clamp(dot(normalize(vec3(-.1,.1,-.1)),rayDirection), 0., 1.);
+    col += vec3(0.75,0.8,0.9)*(2.*pow(sun,8.) + 10.*pow(sun,32.));
+    return col;
 }
 
 void getMaterialProperties(in vec3 pos, in float mat, out vec3 albedo, out float matType, out float roughness) {
 	if(mat < 1.5){
 		//plane
-		albedo = vec3(.25 + .25*mod(floor(pos.x*5.) + floor(pos.z*5.), 2.));
+		albedo = vec3(1.0,1.0,1.0);//vec3(.25 + .25*mod(floor(pos.x*5.) + floor(pos.z*5.), 2.));
 		roughness = 1.;
         matType = LAMBERTIAN;
 	} else if( mat < 2.5){
@@ -170,6 +171,7 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
     vec3 rayHit = worldhit( rayOrigin, rayDirection, vec2(.0001, 100), normal );
 	if(rayHit.z < 2.5 && rayHit.z > 0.){
         // we are hit to plane and sphere
+        // sample 10 constant points on the 
         rayOrigin += rayDirection * rayHit.y; // update hit pos
         getMaterialProperties(rayOrigin, rayHit.z, albedo, matType, roughness);//get materials
         col *= albedo;
@@ -177,29 +179,60 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         vec3 lray = lpos - rayOrigin;
         vec3 spos;
         vec3 pray = spos - rayOrigin;
+        int res = 32;
         if(rayHit.z > 1.85){
             spos = vec3(sposs[6],sposs[7], sposs[8]);
             pray = spos - rayOrigin;
-            float angle = dot(normalize(lray), normalize(pray)/rad);
-            col = vec3(.5-angle);
+            float c = 0;
+            for(int i = 0; i < res/2; i++){
+                vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            for(int i = res/2; i < res; i++){
+                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            col = vec3(sqrt(c));
             return col;
         } else if(rayHit.z > 1.75){
             spos = vec3(sposs[3],sposs[4], sposs[5]);
             pray = spos - rayOrigin;
-            float angle = dot(normalize(lray), normalize(pray)/rad);
-            col = vec3(.5-angle);
+            float c = 0;
+            for(int i = 0; i < res/2; i++){
+                vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            for(int i = res/2; i < res; i++){
+                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            col = vec3(sqrt(c));
             return col;
         } else if(rayHit.z > 1.65){
             spos = vec3(sposs[0],sposs[1], sposs[2]);
             pray = spos - rayOrigin;
-            float angle = dot(normalize(lray), normalize(pray)/rad);
-            col = vec3(.5-angle);
+            float c = 0;
+            for(int i = 0; i < res/2; i++){
+                vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            for(int i = res/2; i < res; i++){
+                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
+                lray = p - rayOrigin;
+                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+            }
+            col = vec3(sqrt(c));
             return col;
         }
         for( int i = 0; i < 3; i++){
             spos = vec3(sposs[3*i],sposs[3*i+1], sposs[3*i + 2]);
             pray = spos - rayOrigin;
-            float ratio =  (rayOrigin.y - lpos.y) / (rayOrigin.y - spos.y);
+            float ratio =  length(rayOrigin - lpos) / length(rayOrigin - spos);
             vec3 projp = pray * ratio + rayOrigin; 
             float r2 = rads[i] * ratio;
             float r1 = rad;
@@ -239,7 +272,7 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         }
         return col;
     } else if(rayHit.z > 2.5){
-        col *= vec3(1.0f);
+        col *= vec3(5.f);
         return col;
     } else {
         col *= noHit(rayDirection);
