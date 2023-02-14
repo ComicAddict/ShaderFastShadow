@@ -164,6 +164,7 @@ int main() {
     glm::vec3 rads(1.0f, 1.0f, 1.0f);
     float rad = 2.f, srad = 1.0f;
     float sposs[9] = {0,1,0,2,1,0,-2,1,0};
+    float part = 0;
     while (!glfwWindowShouldClose(window))
     {
 
@@ -188,6 +189,7 @@ int main() {
         glUniform1fv(glGetUniformLocation(shader.ID, "sposs"), 9, sposs);
         shader.setVec3("lpos", lPos);
         shader.setFloat("iTime", currentFrame);
+        shader.setFloat("part", part);
         shader.setFloat("rad", rad);
         shader.setVec3("rads", rads);
         shader.setVec2("plane", psize);
@@ -209,6 +211,7 @@ int main() {
         ImGui::DragFloat3("Cam Pos", &camPos[0], 0.01f);
         ImGui::DragFloat("Light Radius", &rad, 0.01f);
         ImGui::DragFloat3("Light Pos", &lPos[0], 0.01);
+        ImGui::DragFloat("Render\nPartition", &part, 0.01f, -1.0f,1.0f);
         
         if (ImGui::Button("Refresh Shader"))
             shader = Shader("C:\\Src\\shaders\\vertRayFrag.glsl", "C:\\Src\\shaders\\fragRayFrag.glsl");
