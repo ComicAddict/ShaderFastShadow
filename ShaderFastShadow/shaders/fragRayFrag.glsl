@@ -15,7 +15,7 @@ out vec4 fragColor;
 
 
 #define MAX_DIST 1e10
-#define PATH_LENGTH 12
+#define PATH_LENGTH 2
 #define LAMBERTIAN 2.
 #define EMIT 3.
 
@@ -150,12 +150,12 @@ vec3 noHit( vec3 rayDirection ) {
 void getMaterialProperties(in vec3 pos, in float mat, out vec3 albedo, out float matType, out float roughness) {
 	if(mat < 1.5){
 		//plane
-		albedo = vec3(1.0,1.0,1.0);//vec3(.25 + .25*mod(floor(pos.x*5.) + floor(pos.z*5.), 2.));
+		albedo = vec3(.6);//vec3(.25 + .25*mod(floor(pos.x*5.) + floor(pos.z*5.), 2.));
 		roughness = 1.;
         matType = LAMBERTIAN;
 	} else if( mat < 2.5){
 		//sphere
-		albedo = vec3(1.0,1.0,1.0);
+		albedo = vec3(.6);
 		matType = LAMBERTIAN;
 		roughness = 1.;
     } else if( mat < 3.5){
@@ -263,7 +263,9 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         }
         
         col *= vec3(1.0f-a);
-        col /= length(lray);
+        col += vec3(0.75,0.8,0.9)/3;
+        col /= 2; 
+        //col /= pow(length(lray),2);
         return col;
     } else if(rayHit.z < 2.5 && rayHit.z > 1.5){
         rayOrigin += rayDirection * rayHit.y; // update hit pos
@@ -356,24 +358,24 @@ vec3 render2( in vec3 ro, in vec3 rd, inout float seed ) {
             getMaterialProperties(ro, res.z, albedo, type, roughness);
 
             if (type < LAMBERTIAN+.5) { // Added/hacked a reflection term
-                float F = FresnelSchlickRoughness(max(0.,-dot(normal, rd)), .04, roughness);
-                if (F > hash1(seed)) {
-                    rd = modifyDirectionWithRoughness(normal, reflect(rd,normal), roughness, seed);
-                } else {
+                //float F = FresnelSchlickRoughness(max(0.,-dot(normal, rd)), .04, roughness);
+                //if (F > hash1(seed)) {
+                  //  rd = modifyDirectionWithRoughness(normal, reflect(rd,normal), roughness, seed);
+                //} else {
                     col *= albedo;
 			        rd = cosWeightedRandomHemisphereDirection(normal, seed);
-                }
+                //}
             } else if(type < EMIT +.5){
                 col *= albedo;
                 return col;
             }
         } else {
             col *= noHit(rd);
-            //col *= vec3(0,1,0);
+            //col *= vec3(0,0,0);
 			return col;
         }
     }
-    return vec3(0);
+    return col;
 }
 
 
@@ -401,7 +403,7 @@ void main() {
     if (fragpos.x < part)
         temp = vec4(render(rayOrigin, rayDirection, seed),1);
     else{
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < 32; i++){
             temp += vec4(render2(rayOrigin, rayDirection, seed),1);
         }
     }

@@ -188,7 +188,7 @@ int main() {
         shader.setVec3("cpos", camPos);
         glUniform1fv(glGetUniformLocation(shader.ID, "sposs"), 9, sposs);
         shader.setVec3("lpos", lPos);
-        shader.setFloat("iTime", currentFrame);
+        shader.setFloat("iTime", currentFrame/100.0f);
         shader.setFloat("part", part);
         shader.setFloat("rad", rad);
         shader.setVec3("rads", rads);
