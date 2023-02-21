@@ -179,57 +179,46 @@ vec3 render( in vec3 rayOrigin, in vec3 rayDirection, inout float seed ) {
         getMaterialProperties(rayOrigin, rayHit.z, albedo, matType, roughness);//get materials
         col *= albedo;
         float a = 0;
+        float d = 0;
         vec3 lray = lpos - rayOrigin;
         vec3 spos;
         vec3 pray = spos - rayOrigin;
-        int res = 32;
+        int res = 16;
         if(rayHit.z > 1.85){
             spos = vec3(sposs[6],sposs[7], sposs[8]);
             pray = spos - rayOrigin;
             float c = 0;
-            for(int i = 0; i < res/2; i++){
+            for(int i = 0; i < res; i++){
                 vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
                 lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+                c = (dot(normalize(lray), normal)+1)/2.0;
+                d = d + c - d*c;
             }
-            for(int i = res/2; i < res; i++){
-                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
-                lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
-            }
-            col = vec3(sqrt(c));
+            col = vec3(d);
             return col;
         } else if(rayHit.z > 1.75){
             spos = vec3(sposs[3],sposs[4], sposs[5]);
             pray = spos - rayOrigin;
             float c = 0;
-            for(int i = 0; i < res/2; i++){
+            for(int i = 0; i < res; i++){
                 vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
                 lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+                c = (dot(normalize(lray), normal)+1)/2.0;
+                d = d + c - d*c;
             }
-            for(int i = res/2; i < res; i++){
-                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
-                lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
-            }
-            col = vec3(sqrt(c));
+            col = vec3(d);
             return col;
         } else if(rayHit.z > 1.65){
             spos = vec3(sposs[0],sposs[1], sposs[2]);
             pray = spos - rayOrigin;
             float c = 0;
-            for(int i = 0; i < res/2; i++){
+            for(int i = 0; i < res; i++){
                 vec3 p = lpos + vec3(rad * cos(i * 12.56 / res), 0.0, rad * sin(i * 12.56 / res));
                 lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
+                c = (dot(normalize(lray), normal)+1)/2.0;
+                d = d + c - d*c;
             }
-            for(int i = res/2; i < res; i++){
-                vec3 p = lpos + vec3(rad *0.1* cos(i * 12.56 / res), 0.0, rad * 0.1 * sin(i * 12.56 / res));
-                lray = p - rayOrigin;
-                c += pow(clamp(dot(normalize(lray), normal), 0, 20),2);
-            }
-            col = vec3(sqrt(c));
+            col = vec3(d);
             return col;
         }
         for( int i = 0; i < 3; i++){
